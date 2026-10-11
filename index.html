@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Алгоритмичен лабиринт</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: #1e293b;
+            border: 2px solid #38bdf8;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(56, 189, 248, 0.15);
+        }
+        h1, h2 {
+            color: #38bdf8;
+            text-align: center;
+        }
+        .code-snippet {
+            background: #020617;
+            border-left: 4px solid #38bdf8;
+            padding: 12px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 15px 0;
+            color: #a5f3fc;
+            border-radius: 4px;
+        }
+        .btn {
+            background: #38bdf8;
+            color: #0f172a;
+            font-weight: bold;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            text-align: center;
+            text-decoration: none;
+            box-sizing: border-box;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #0ea5e9;
+        }
+        input[type="text"], input[type="number"] {
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 5px;
+            font-size: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #475569;
+            padding: 8px;
+            text-align: center;
+        }
+        th { background: #0f172a; color: #38bdf8; }
+        label {
+            display: block;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+        .screen { display: none; }
+        .error-msg { color: #ef4444; font-weight: bold; margin-top: 10px; text-align: center; display: none; }
+        .success-msg { color: #34d399; font-weight: bold; margin-top: 10px; text-align: center; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Начален екран -->
+    <div id="screen-start" class="screen" style="display: block;">
+        <h1>🔒 АЛГОРИТМИЧЕН ЛАБИРИНТ</h1>
+        <p><strong>Историята:</strong> Вие сте екип от софтуерни инженери, блокирани в контролната зала. Преминете през трите мисии, съберете тайните числа и въведете финалния спасителен код, за да избягате!</p>
+        
+        <div style="margin: 20px 0;">
+            <label>Име на ученика / екипа: <br>
+                <input type="text" id="studentName" placeholder="Въведете име...">
+            </label>
+        </div>
+        <a href="javascript:void(0);" class="btn" onclick="startTheGame()">Влез в лабиринта</a>
+    </div>
+
+    <!-- Мисия 1 -->
+    <div id="screen-mission1" class="screen">
+        <h2>МИСИЯ 1 от 3: Робо-Присвояване</h2>
+        <div class="code-snippet" id="m1_code"></div>
+        
+        <p>Попълнете липсващата стойност в трасиращата таблица:</p>
+        <table>
+            <tr><th>Стъпка</th><th>Променлива Х</th><th>Променлива Y</th></tr>
+            <tr><td>Начало</td><td id="t_initX"></td><td id="t_initY"></td></tr>
+            <tr><td>Стъпка 3</td><td id="t_s3X"></td><td id="t_s3Y"></td></tr>
+            <tr><td>Стъпка 4</td><td id="t_s4X"></td><td id="t_s4Y"></td></tr>
+            <tr><td>Стъпка 5 (Край)</td><td><input type="number" id="m1_x" placeholder="Х?"></td><td id="t_endY"></td></tr>
+        </table>
+
+        <p><strong>Колко е Тайно число 1 (крайната стойност на Х)?</strong></p>
+        <input type="number" id="m1_ans" placeholder="Въведете число...">
+        <button class="btn" type="button" onclick="checkMission1()">Провери Мисия 1</button>
+        <p id="err1" class="error-msg">Грешен отговор! Опитайте пак.</p>
+        <p id="succ1" class="success-msg">Браво! Преминавате към Мисия 2...</p>
+    </div>
+
+    <!-- Мисия 2 -->
+    <div id="screen-mission2" class="screen">
+        <h2>МИСИЯ 2 от 3: Кръстопътят на разклоненията</h2>
+        <p id="m2_data"></p>
+        <div class="code-snippet" id="m2_code"></div>
+        
+        <div style="margin-top: 15px;">
+            <p id="m2_q1"><strong>1. Вярно ли е условието A + B > [стойност]?</strong></p>
+            <label><input type="radio" name="m2_cond" value="yes"> ДА</label>
+            <label><input type="radio" name="m2_cond" value="no"> НЕ</label>
+        </div>
+
+        <div style="margin-top: 15px;">
+            <p><strong>2. През коя посока / врата трябва да преминете?</strong></p>
+            <label><input type="radio" name="m2_door" value="A"> Врата А</label>
+            <label><input type="radio" name="m2_door" value="B"> Врата Б</label>
+        </div>
+
+        <div style="margin-top: 15px;">
+            <p><strong>3. Коя е крайната стойност на променливата C [Тайно число 2]?</strong></p>
+            <input type="number" id="m2_ans" placeholder="Стойност на C...">
+        </div>
+
+        <button class="btn" type="button" onclick="checkMission2()">Провери Мисия 2</button>
+        <p id="err2" class="error-msg">Грешен отговор! Проверете условието, вратата и изчисленията.</p>
+        <p id="succ2" class="success-msg">Отлично! Преминавате към Мисия 3...</p>
+    </div>
+
+    <!-- Мисия 3 -->
+    <div id="screen-mission3" class="screen">
+        <h2>МИСИЯ 3 от 3: Капанът на безкрайния цикъл</h2>
+        <p>Разгледайте двата цикъла:</p>
+        <div style="display: flex; gap: 10px;">
+            <div style="flex:1;" class="code-snippet" id="m3_f1"></div>
+            <div style="flex:1;" class="code-snippet" id="m3_f2"></div>
+        </div>
+
+        <div style="margin-top: 15px;">
+            <p id="m3_q1"><strong>1. Кой от двата фрагмента е безкраен цикъл?</strong></p>
+            <label><input type="radio" name="m3_inf" value="1" id="lbl_inf1"> Фрагмент №1</label>
+            <label><input type="radio" name="m3_inf" value="2" id="lbl_inf2"> Фрагмент №2</label>
+        </div>
+
+        <div style="margin-top: 15px;">
+            <p id="m3_q2"><strong>2. Колко пъти се изпълнява коректният цикъл?</strong></p>
+            <input type="number" id="m3_iter" placeholder="Брой пъти...">
+        </div>
+
+        <div style="margin-top: 15px;">
+            <p><strong>3. Каква е крайната стойност на Сума в коректния цикъл [Тайно число 3]?</strong></p>
+            <input type="number" id="m3_sum" placeholder="Сума?...">
+        </div>
+
+        <button class="btn" type="button" onclick="checkMission3()">Провери Мисия 3</button>
+        <p id="err3" class="error-msg">Грешен отговор! Проверете кой цикъл е безкраен и изчислете сумата.</p>
+        <p id="succ3" class="success-msg">Перфектно! Преминавате към финала...</p>
+    </div>
+
+    <!-- Финален екран -->
+    <div id="screen-final" class="screen">
+        <h1>🎉 ФИНАЛЕН ИЗХОД</h1>
+        <p>Събрахте трите тайни числа от мисиите:</p>
+        <ul>
+            <li>Тайно число 1: <strong id="res1" style="color:#38bdf8;"></strong></li>
+            <li>Тайно число 2: <strong id="res2" style="color:#38bdf8;"></strong></li>
+            <li>Тайно число 3: <strong id="res3" style="color:#38bdf8;"></strong></li>
+        </ul>
+        <p><strong>Въведете общия сбор на трите тайни числа (Финален спасителен код):</strong></p>
+        <input type="number" id="final_ans" placeholder="Въведете сбор...">
+        <button class="btn" type="button" onclick="checkFinal()">Отвори главната врата</button>
+        <p id="errFinal" class="error-msg">Грешен сбор! Съберете трите тайни числа.</p>
+    </div>
+
+    <!-- Успешен край -->
+    <div id="screen-success" class="screen" style="text-align: center;">
+        <h1 style="color: #34d399;">🏆 МИСИЯТА ИЗПЪЛНЕНА!</h1>
+        <p id="successMsg" style="font-size: 18px;"></p>
+        <p>Поздравления! Вие успешно избягахте от Алгоритмичния лабиринт!</p>
+
+<div style="margin-top: 25px; padding: 20px; background: #0f172a; border-radius: 12px;">
+    <h2 style="color: #38bdf8;">Резултат от играта</h2>
+    <p>Ученик / екип: <strong id="gradeName"></strong></p>
+    <p>Опити в мисия 1: <strong id="gradeM1"></strong></p>
+    <p>Опити в мисия 2: <strong id="gradeM2"></strong></p>
+    <p>Опити в мисия 3: <strong id="gradeM3"></strong></p>
+    <p>Общо опити: <strong id="gradeAttempts"></strong></p>
+    <p style="font-size: 22px;">
+        Оценка:
+        <strong id="finalGrade" style="color: #34d399; font-size: 36px;"></strong>
+    </p>
+</div>
+
+    </div>
+</div>
+
+<script>
+const variants = [
+    {
+       
+        m1: { code: "1. X = 4\n2. Y = 5\n3. Промени стойността на X, като увеличиш с 3\n4. Промени стойността на Y, като умножиш по 2\n5. Промени стойността на X, като зададеш стойността на Y минус 2", initX: 4, initY: 5, s3X: 7, s3Y: 5, s4X: 7, s4Y: 10, endY: 10, ansX: 8 },
+        m2: { A: 10, B: 3, limit: 10, cond: "yes", door: "A", C: 20, codeText: "АКО (A + B) > 10 ТОГАВА:\n   C = A * 2  (Врата А)\nИНАЧЕ:\n   C = B + 5  (Врата Б)" },
+        m3: { infSide: "1", f1: "Фрагмент №1:\nx = 1\nДОКАТО x < 5 ИЗПЪЛНЯВАЙ:\n Печат X", f2: "Фрагмент №2:\nBrojach = 0\nSuma = 0\nДОКАТО Brojach < 4 ИЗПЪЛНЯВАЙ:\n Suma = Suma + 5\n Brojach = Brojach + 1", iter: 4, sum: 20 }
+    },
+    {
+       
+        m1: { code: "1. X = 3\n2. Y = 4\n3. Промени стойността на X, като умножиш по 2\n4. Промени стойността на X, като зададеш стойността на Y плюс 5\n5. Промени стойността на X, като зададеш стойността на Y минус 3", initX: 3, initY: 4, s3X: 6, s3Y: 4, s4X: 6, s4Y: 9, endY: 9, ansX: 6 },
+
+        m2: { A: 5, B: 4, limit: 12, cond: "no", door: "B", C: 14, codeText: "АКО (A + B) > 12 ТОГАВА:\n   C = A * 3  (Врата А)\nИНАЧЕ:\n   C = B + 10 (Врата Б)" },
+        m3: { infSide: "2", f1: "Фрагмент №1:\nBrojach = 0\nSuma = 0\nДОКАТО Brojach < 3 ИЗПЪЛНЯВАЙ:\n Suma = Suma + 10\n Brojach = Brojach + 1", f2: "Фрагмент №2:\ny = 2\nДОКАТО y < 6 ИЗПЪЛНЯВАЙ:\n Печат Y", iter: 3, sum: 30 }
+    },
+    {
+        
+m1: { code: "1. X = 2\n2. Y = 6\n3. Промени стойността на X, като зададеш сбора на X и Y\n4. Промени стойността на Y, като зададеш стойността на X, умножена по 2\n5. Промени стойността на X, като зададеш стойността на Y минус 4", initX: 2, initY: 6, s3X: 8, s3Y: 6, s4X: 8, s4Y: 16, endY: 16, ansX: 12 },
+
+        m2: { A: 9, B: 5, limit: 10, cond: "yes", door: "A", C: 18, codeText: "АКО (A + B) > 10 ТОГАВА:\n   C = A * 2  (Врата А)\nИНАЧЕ:\n   C = B + 6  (Врата Б)" },
+        m3: { infSide: "1", f1: "Фрагмент №1:\nz = 3\nДОКАТО z < 7 ИЗПЪЛНЯВАЙ:\n Печат Z", f2: "Фрагмент №2:\nBrojach = 0\nSuma = 0\nДОКАТО Brojach < 5 ИЗПЪЛНЯВАЙ:\n Suma = Suma + 4\n Brojach = Brojach + 1", iter: 5, sum: 20 }
+    },
+    {
+        
+m1: { code: "1. X = 5\n2. Y = 3\n3. Промени стойността на X, като умножиш по 3\n4. Промени стойността на Y, като увеличиш с 4\n5. Промени стойността на X, като зададеш стойността на Y плюс 2", initX: 5, initY: 3, s3X: 15, s3Y: 3, s4X: 15, s4Y: 7, endY: 7, ansX: 9 },
+
+        m2: { A: 4, B: 2, limit: 9, cond: "no", door: "B", C: 12, codeText: "АКО (A + B) > 9 ТОГАВА:\n   C = A * 4  (Врата А)\nИНАЧЕ:\n   C = B + 10 (Врата Б)" },
+        m3: { infSide: "2", f1: "Фрагмент №1:\nBrojach = 0\nSuma = 0\nДОКАТО Brojach < 4 ИЗПЪЛНЯВАЙ:\n Suma = Suma + 6\n Brojach = Brojach + 1", f2: "Фрагмент №2:\na = 1\nДОКАТО a < 4 ИЗПЪЛНЯВАЙ:\n Печат A", iter: 4, sum: 24 }
+    }
+];
+
+
+function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomChoice(items) {
+    return items[randomInt(0, items.length - 1)];
+}
+
+
+// МИСИЯ 1: Линейни алгоритми и проследяване на променливи
+function generateMission1() {
+    const initX = randomInt(2, 9);
+    const initY = randomInt(3, 10);
+
+    const opX = randomChoice(["+", "*"]);
+    const kX = randomInt(2, 5);
+    const s3X = opX === "+" ? initX + kX : initX * kX;
+
+    const opY = randomChoice(["+", "*"]);
+    const kY = randomInt(2, 4);
+    const s4Y = opY === "+" ? initY + kY : initY * kY;
+
+    const opEnd = randomChoice(["+", "-"]);
+    const kEnd = randomInt(1, 5);
+    const ansX = opEnd === "+"
+        ? s4Y + kEnd
+        : s4Y - kEnd;
+
+    const textX = opX === "+"
+        ? `увеличиш с ${kX}`
+        : `умножиш по ${kX}`;
+
+    const textY = opY === "+"
+        ? `увеличиш с ${kY}`
+        : `умножиш по ${kY}`;
+
+    const textEnd = opEnd === "+"
+        ? `плюс ${kEnd}`
+        : `минус ${kEnd}`;
+
+    const code = [
+        `1. X = ${initX}`,
+        `2. Y = ${initY}`,
+        `3. Промени стойността на X, като ${textX}`,
+        `4. Промени стойността на Y, като ${textY}`,
+        `5. Промени стойността на X, като зададеш стойността на Y ${textEnd}`
+    ].join("\n");
+
+    return {
+        code,
+        initX,
+        initY,
+        s3X,
+        s3Y: initY,
+        s4X: s3X,
+        s4Y,
+        endY: s4Y,
+        ansX
+    };
+}
+
+
+// МИСИЯ 2: Разклонени алгоритми
+function generateMission2() {
+    const A = randomInt(3, 15);
+    const B = randomInt(2, 12);
+    const sum = A + B;
+
+    // Случайно определяме дали условието ще е вярно или невярно.
+    const conditionIsTrue = Math.random() < 0.5;
+
+    // При вярно условие границата е по-малка от сбора.
+    // При невярно условие границата е равна или по-голяма.
+    const limit = conditionIsTrue
+        ? randomInt(1, sum - 1)
+        : randomInt(sum, sum + 5);
+
+    const cond = conditionIsTrue ? "yes" : "no";
+    const door = conditionIsTrue ? "A" : "B";
+
+    const factorA = randomInt(2, 4);
+    const offsetB = randomInt(3, 10);
+
+    const resultA = A * factorA;
+    const resultB = B + offsetB;
+    const C = conditionIsTrue ? resultA : resultB;
+
+    const codeText = [
+        `АКО (A + B) > ${limit} ТОГАВА:`,
+        `   C = A * ${factorA}  (Врата А)`,
+        "ИНАЧЕ:",
+        `   C = B + ${offsetB}  (Врата Б)`
+    ].join("\n");
+
+    return {
+        A,
+        B,
+        limit,
+        cond,
+        door,
+        C,
+        codeText
+    };
+}
+
+// МИСИЯ 3: Циклични алгоритми
+function generateMission3() {
+    const infiniteSide = randomChoice(["1", "2"]);
+
+    const iterations = randomInt(3, 6);
+    const addValue = randomInt(2, 9);
+    const sum = iterations * addValue;
+
+    const counterName = "Brojach";
+    const sumName = "Suma";
+
+    // Коректен цикъл: броячът се увеличава при всяка итерация.
+    const correctLoop = [
+        "Brojach = 0",
+        "Suma = 0",
+        `ДОКАТО Brojach < ${iterations} ИЗПЪЛНЯВАЙ:`,
+        `    Suma = Suma + ${addValue}`,
+        "    Brojach = Brojach + 1"
+    ].join("\n");
+
+    // Безкраен цикъл: условието остава вярно,
+    // защото управляващата променлива не се променя.
+    const infiniteLoop = [
+        "x = 1",
+        `ДОКАТО x < ${randomInt(4, 8)} ИЗПЪЛНЯВАЙ:`,
+        "    Печат X"
+    ].join("\n");
+
+    return {
+        infSide: infiniteSide,
+        f1: infiniteSide === "1"
+            ? "Фрагмент №1 (анализирайте):\n" + infiniteLoop
+            : "Фрагмент №1 (анализирайте):\n" + correctLoop,
+        f2: infiniteSide === "2"
+            ? "Фрагмент №2 (анализирайте):\n" + infiniteLoop
+            : "Фрагмент №2 (анализирайте):\n" + correctLoop,
+        iter: iterations,
+        sum
+    };
+}
+
+// Създаваме нов комплект задачи при всяко зареждане на играта.
+const currentVariant = {
+    m1: generateMission1(),
+    m2: generateMission2(),
+    m3: generateMission3()
+};
+
+
+let student = "";
+
+let attempts = {
+    m1: 0,
+    m2: 0,
+    m3: 0
+};
+
+
+
+window.onload = function() {
+    // Мисия 1
+    document.getElementById('m1_code').innerText = currentVariant.m1.code;
+    document.getElementById('t_initX').innerText = currentVariant.m1.initX;
+    document.getElementById('t_initY').innerText = currentVariant.m1.initY;
+    document.getElementById('t_s3X').innerText = currentVariant.m1.s3X;
+    document.getElementById('t_s3Y').innerText = currentVariant.m1.s3Y;
+    document.getElementById('t_s4X').innerText = currentVariant.m1.s4X;
+    document.getElementById('t_s4Y').innerText = currentVariant.m1.s4Y;
+    document.getElementById('t_endY').innerText = currentVariant.m1.endY;
+
+    // Мисия 2
+    document.getElementById('m2_data').innerHTML = `Зададени начални данни: <strong>A = ${currentVariant.m2.A}, B = ${currentVariant.m2.B}, C = 0</strong>`;
+    document.getElementById('m2_code').innerText = currentVariant.m2.codeText;
+    document.getElementById('m2_q1').innerHTML = `<strong>1. Вярно ли е условието A + B > ${currentVariant.m2.limit}?</strong>`;
+
+    // Мисия 3
+    document.getElementById('m3_f1').innerText = currentVariant.m3.f1;
+    document.getElementById('m3_f2').innerText = currentVariant.m3.f2;
+    document.getElementById('m3_q2').innerHTML = `<strong>2. Колко пъти се изпълнява коректният цикъл (итерации)?</strong>`;
+    
+    
+document.getElementById("lbl_inf1").lastChild.textContent =
+    currentVariant.m3.infSide === "1"
+        ? " Фрагмент №1 (безкраен)"
+        : " Фрагмент №1 (коректен)";
+
+document.getElementById("lbl_inf2").lastChild.textContent =
+    currentVariant.m3.infSide === "2"
+        ? " Фрагмент №2 (безкраен)"
+        : " Фрагмент №2 (коректен)";
+
+};
+
+
+
+let examTerminated = false;
+
+function terminateExam(reason) {
+    if (examTerminated) return;
+
+    // Не прекратяваме опит, ако играта още не е започнала.
+    const mission1 = document.getElementById('screen-mission1');
+    const mission2 = document.getElementById('screen-mission2');
+    const mission3 = document.getElementById('screen-mission3');
+    const finalScreen = document.getElementById('screen-final');
+
+    const gameStarted =
+        (mission1 && mission1.style.display === 'block') ||
+        (mission2 && mission2.style.display === 'block') ||
+        (mission3 && mission3.style.display === 'block') ||
+        (finalScreen && finalScreen.style.display === 'block');
+
+    if (!gameStarted) return;
+
+    examTerminated = true;
+
+    if (student) {
+        const completedPlayers = JSON.parse(
+            localStorage.getItem('completedPlayers') || '[]'
+        );
+
+        if (!completedPlayers.includes(student)) {
+            completedPlayers.push(student);
+            localStorage.setItem(
+                'completedPlayers',
+                JSON.stringify(completedPlayers)
+            );
+        }
+
+        localStorage.setItem(
+            'labyrinthResult_' + student,
+            JSON.stringify({
+                grade: 2,
+                reason: reason,
+                date: new Date().toISOString()
+            })
+        );
+    }
+
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.style.display = 'none';
+    });
+
+    let resultScreen = document.getElementById('screen-violation');
+
+    if (!resultScreen) {
+        resultScreen = document.createElement('div');
+        resultScreen.id = 'screen-violation';
+        resultScreen.className = 'screen';
+        document.body.appendChild(resultScreen);
+    }
+
+    resultScreen.style.display = 'block';
+    resultScreen.innerHTML = `
+        <h1>Опитът е прекратен</h1>
+        <p>Установено е напускане на изпитния режим.</p>
+        <p>Причина: ${reason}</p>
+        <h2>Оценка: 2</h2>
+    `;
+
+    if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+    }
+}
+
+
+
+let exitWarningShown = false;
+
+function handleExitAttempt(reason) {
+    if (examTerminated) return;
+
+    if (!exitWarningShown) {
+        exitWarningShown = true;
+
+        alert(
+            "ВНИМАНИЕ!\n\n" +
+            "Засечен е опит за напускане на играта.\n" +
+            "При следващ опит играта ще бъде прекратена " +
+            "и ще бъде записана оценка 2."
+        );
+
+        return;
+    }
+
+    terminateExam(reason);
+}
+
+document.addEventListener('fullscreenchange', function () {
+    if (
+        !document.fullscreenElement &&
+        localStorage.getItem('labyrinthInProgress') === 'true'
+    ) {
+        handleExitAttempt('Излизане от цял екран');
+    }
+});
+
+document.addEventListener('visibilitychange', function () {
+    if (
+        document.hidden &&
+        localStorage.getItem('labyrinthInProgress') === 'true'
+    ) {
+        handleExitAttempt('Напускане на раздела на играта');
+    }
+});
+
+
+
+function startTheGame() {
+    const nameField = document.getElementById('studentName');
+
+    if (!nameField) {
+        alert("Не е намерено полето за име!");
+        return;
+    }
+
+    const nameInput = nameField.value.trim().toUpperCase();
+    const playerPattern = /^[0-9]{1,2}[А-ЯA-Z]-[0-9]{1,2}$/;
+
+    if (!playerPattern.test(nameInput)) {
+        alert("Въведете идентификатор във формат 8А-12!");
+        return;
+    }
+
+    const completedPlayers = JSON.parse(
+        localStorage.getItem('completedPlayers') || '[]'
+    );
+
+    if (completedPlayers.includes(nameInput)) {
+        alert("Този играч вече е завършил играта и няма право на повторен опит!");
+        return;
+    }
+
+    student = nameInput;
+
+    const startScreen = document.getElementById('screen-start');
+    const mission1Screen = document.getElementById('screen-mission1');
+
+    if (!startScreen || !mission1Screen) {
+        alert("Грешка: не е намерен началният екран или екранът на Мисия 1.");
+        return;
+    }
+
+    
+startScreen.style.display = 'none';
+mission1Screen.style.display = 'block';
+
+examTerminated = false;
+localStorage.setItem('labyrinthInProgress', 'true');
+
+if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(() => {
+        alert("Не успяхме да включим цял екран. Опитайте отново.");
+    });
+}
+
+}
+
+
+function checkMission1() {
+    const xInput = document.getElementById('m1_x');
+    const ansInput = document.getElementById('m1_ans');
+
+    // Не броим опит, ако полетата са празни
+    if (xInput.value.trim() === "" || ansInput.value.trim() === "") {
+        document.getElementById('err1').innerText =
+            "Моля, попълнете и двете полета!";
+        document.getElementById('err1').style.display = "block";
+        return;
+    }
+
+    // Броим само действителен опит за проверка
+    attempts.m1++;
+
+    const xVal = Number(xInput.value);
+    const ansVal = Number(ansInput.value);
+
+    if (
+        xVal === currentVariant.m1.ansX &&
+        ansVal === currentVariant.m1.ansX
+    ) {
+        document.getElementById('err1').style.display = "none";
+
+        document.getElementById('succ1').innerText =
+            `Браво! Тайно число 1 е ${currentVariant.m1.ansX}. Преминавате към Мисия 2...`;
+
+        document.getElementById('succ1').style.display = "block";
+
+        // Предпазваме от повторно изпращане на същата мисия
+        document.querySelector('#screen-mission1 button').disabled = true;
+
+        setTimeout(() => {
+            document.getElementById('screen-mission1').style.display = 'none';
+            document.getElementById('screen-mission2').style.display = 'block';
+        }, 2000);
+    } else {
+        document.getElementById('err1').innerText =
+            "Отговорът не е верен. Опитайте отново.";
+        document.getElementById('err1').style.display = "block";
+    }
+}
+
+
+function checkMission2() {
+    const cond = document.querySelector('input[name="m2_cond"]:checked');
+    const door = document.querySelector('input[name="m2_door"]:checked');
+    const ansInput = document.getElementById('m2_ans');
+
+    if (!cond || !door || ansInput.value.trim() === "") {
+        alert("Моля, отговорете на всички въпроси в мисията!");
+        return;
+    }
+
+    // Един опит се брои при натискане на бутона за проверка
+    attempts.m2++;
+
+    const val = Number(ansInput.value);
+
+    if (
+        cond.value === currentVariant.m2.cond &&
+        door.value === currentVariant.m2.door &&
+        val === currentVariant.m2.C
+    ) {
+        document.getElementById('err2').style.display = "none";
+
+        document.getElementById('succ2').innerText =
+            `Отлично! Тайно число 2 е ${currentVariant.m2.C}. Преминавате към Мисия 3...`;
+
+        document.getElementById('succ2').style.display = "block";
+
+        // Изключваме бутона след успешния отговор
+        const buttons = document.querySelectorAll('#screen-mission2 button');
+        buttons.forEach(button => button.disabled = true);
+
+        setTimeout(() => {
+            document.getElementById('screen-mission2').style.display = 'none';
+            document.getElementById('screen-mission3').style.display = 'block';
+        }, 2000);
+    } else {
+        document.getElementById('err2').innerText =
+            "Някои отговори са грешни. Опитайте отново.";
+        document.getElementById('err2').style.display = "block";
+    }
+}
+
+
+function checkMission3() {
+    const inf = document.querySelector('input[name="m3_inf"]:checked');
+    const iterInput = document.getElementById('m3_iter');
+    const sumInput = document.getElementById('m3_sum');
+
+    if (
+        !inf ||
+        iterInput.value.trim() === "" ||
+        sumInput.value.trim() === ""
+    ) {
+        alert("Моля, отговорете на всички въпроси в мисията!");
+        return;
+    }
+
+    // Броим опит само при проверка на попълнените отговори
+    attempts.m3++;
+
+    const iter = Number(iterInput.value);
+    const sum = Number(sumInput.value);
+
+    if (
+        inf.value === currentVariant.m3.infSide &&
+        iter === currentVariant.m3.iter &&
+        sum === currentVariant.m3.sum
+    ) {
+        document.getElementById('err3').style.display = "none";
+
+        document.getElementById('succ3').innerText =
+            `Перфектно! Тайно число 3 е ${currentVariant.m3.sum}. Преминавате към финала...`;
+
+        document.getElementById('succ3').style.display = "block";
+
+
+
+        document.getElementById('res1').innerText = currentVariant.m1.ansX;
+        document.getElementById('res2').innerText = currentVariant.m2.C;
+        document.getElementById('res3').innerText = currentVariant.m3.sum;
+
+        // Предпазваме от повторно изпращане
+        document.querySelectorAll('#screen-mission3 button')
+            .forEach(button => button.disabled = true);
+
+        setTimeout(() => {
+            document.getElementById('screen-mission3').style.display = 'none';
+            document.getElementById('screen-final').style.display = 'block';
+        }, 2000);
+    } else {
+        document.getElementById('err3').innerText =
+            "Някои отговори са грешни. Опитайте отново.";
+        document.getElementById('err3').style.display = "block";
+    }
+}
+
+
+function checkFinal() {
+    const input = document.getElementById('final_ans');
+    const val = Number(input.value);
+    const error = document.getElementById('errFinal');
+
+    if (input.value.trim() === "") {
+        error.innerText = "Моля, въведете финалния код!";
+        error.style.display = "block";
+        return;
+    }
+
+    const correctFinal =
+        currentVariant.m1.ansX +
+        currentVariant.m2.C +
+        currentVariant.m3.sum;
+
+    if (val === correctFinal) {
+        const totalAttempts =
+            attempts.m1 + attempts.m2 + attempts.m3;
+alert(
+    "Мисия 1: " + attempts.m1 +
+    "\nМисия 2: " + attempts.m2 +
+    "\nМисия 3: " + attempts.m3 +
+    "\nОбщо: " + totalAttempts
+);
+
+        let grade;
+
+        if (totalAttempts === 3) {
+            grade = 6;
+        } else if (totalAttempts <= 5) {
+            grade = 5;
+        } else if (totalAttempts <= 8) {
+            grade = 4;
+        } else if (totalAttempts <= 11) {
+            grade = 3;
+        } else {
+            grade = 2;
+        }
+
+        document.getElementById('screen-final').style.display = 'none';
+        document.getElementById('screen-success').style.display = 'block';
+localStorage.removeItem('labyrinthInProgress');
+
+
+const completedPlayers = JSON.parse(
+    localStorage.getItem('completedPlayers') || '[]'
+);
+
+if (!completedPlayers.includes(student)) {
+    completedPlayers.push(student);
+    localStorage.setItem(
+        'completedPlayers',
+        JSON.stringify(completedPlayers)
+    );
+}
+
+
+        document.getElementById('successMsg').innerText =
+            `Екип: ${student} успешно завърши играта със спасителен код ${correctFinal}!`;
+
+        document.getElementById('gradeName').innerText = student;
+        document.getElementById('gradeM1').innerText = attempts.m1;
+        document.getElementById('gradeM2').innerText = attempts.m2;
+        document.getElementById('gradeM3').innerText = attempts.m3;
+        document.getElementById('gradeAttempts').innerText = totalAttempts;
+        document.getElementById('finalGrade').innerText = grade;
+
+    } else {
+        error.innerText = "Грешен сбор! Опитайте отново.";
+        error.style.display = "block";
+    }
+}
+
+    
+</script>
+
+</body>
+</html>
